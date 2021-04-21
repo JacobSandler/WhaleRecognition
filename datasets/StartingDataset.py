@@ -9,6 +9,7 @@ class StartingDataset(torch.utils.data.Dataset):
     def __init__(self):
         pass
 
+        #load in this one image at a time every epoch
     def __getitem__(self, index):
         inputs = torch.zeros([3, 224, 224])
         label = 0

@@ -46,7 +46,12 @@ def starting_train(
         for i, batch in enumerate(train_loader):
             print(f"\rIteration {i + 1} of {len(train_loader)} ...", end="")
 
-            # TODO: Backpropagation and gradient descent
+            optimizer.zero_grad()
+            predictions = model(batch.inputs)
+            loss = loss_fn(predictions, batch.labels)
+            loss.backward()
+            optimizer.step()
+            
 
             # Periodically evaluate our model + log to Tensorboard
             if step % n_eval == 0:
