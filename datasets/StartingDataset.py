@@ -16,8 +16,8 @@ class StartingDataset(torch.utils.data.Dataset):
         if torch.is_tensor(index):
             index = index.tolist
         
-        label = self.image_frame.iloc[index, 1]
-        image_path = self.image_dir + self.image_frame.iloc[index, 0]
+        label = self.images_frame.iloc[index, 1]
+        image_path = self.image_dir + self.images_frame.iloc[index, 0]
         image = torchvision.io.read_image(image_path)
 
         return image, label
