@@ -55,15 +55,19 @@ def starting_train(
 
             # Periodically evaluate our model + log to Tensorboard
             if step % n_eval == 0:
+                writer.add_scalar('train_loss', loss, global_step=step)
+
                 # TODO:
-                # Compute training loss and accuracy.
+                # Compute training accuracy.
                 # Log the results to Tensorboard.
 
                 # TODO:
                 # Compute validation loss and accuracy.
                 # Log the results to Tensorboard.
                 # Don't forget to turn off gradient calculations!
-                evaluate(val_loader, model, loss_fn)
+                val_loss, val_accuracy = evaluate(val_loader, model, loss_fn)
+                writer.add_scalar('val_loss', val_loss, global_step=step)
+                writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
 
             step += 1
 
@@ -90,7 +94,24 @@ def compute_accuracy(outputs, labels):
 def evaluate(val_loader, model, loss_fn):
     """
     Computes the loss and accuracy of a model on the validation dataset.
-
-    TODO!
     """
-    pass
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch in val_loader:
+            images, labels = batch
+            images = images.to(device)
+            labels = labels.to(device)
+
+            outputs = model(images)
+            loss = loss_fn(outputs, labels)
+            predictions = torch.argmax(outputs, dim=1)
+            
+            correct += (labels == predictions).int().sum()
+            total += len(predictions)
+
+    accuracy = (correct / total).item()
+    model.train()
+    return loss, accuracy
+
