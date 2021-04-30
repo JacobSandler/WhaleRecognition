@@ -31,8 +31,8 @@ def main():
     print("Batch size:", args.batch_size)
 
     # Initalize dataset and model. Then train the model!
-    train_dataset = StartingDataset(constants.CSV_PATH, constants.IMAGE_DIR)
-    val_dataset = StartingDataset(constants.CSV_PATH, constants.IMAGE_DIR)
+    train_dataset = StartingDataset(constants.CSV_PATH, constants.IMAGE_DIR, constants.IMAGE_SIZE)
+    val_dataset = StartingDataset(constants.CSV_PATH, constants.IMAGE_DIR, constants.IMAGE_SIZE)
     model = StartingNetwork()
     starting_train(
         train_dataset=train_dataset,
