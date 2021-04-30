@@ -1,4 +1,5 @@
 import torch
+import csv
 
 
 class StartingDataset(torch.utils.data.Dataset):
@@ -11,8 +12,12 @@ class StartingDataset(torch.utils.data.Dataset):
 
         #load in this one image at a time every epoch
     def __getitem__(self, index):
-        inputs = torch.zeros([3, 224, 224])
-        label = 0
+        #inputs = torch.zeros([3, 224, 224])
+        #label = 0
+        inputs = self.image[index]
+        label = self.labels[index]
+        
+
 
         return inputs, label
 
