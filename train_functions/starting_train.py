@@ -47,6 +47,9 @@ def starting_train(
             print(f"\rIteration {i + 1} of {len(train_loader)} ...", end="")
             images, labels = batch
 
+            print(type(labels))
+            print(type(labels[0]))
+
             optimizer.zero_grad()
             predictions = model(images)
             loss = loss_fn(predictions, labels)
