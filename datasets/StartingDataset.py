@@ -11,6 +11,15 @@ class StartingDataset(torch.utils.data.Dataset):
         self.images_frame = pd.read_csv(csv_path)
         self.image_dir = image_dir
         self.image_size = image_size
+        self.labels = dict() 
+
+        # Convert labels to numeric ids
+        ids = self.images_frame["Id"]
+        ids.drop_duplicates(inplace=True)
+        index = 0
+        for id in ids:
+            self.labels[id] = index
+            index += 1
 
         #load in this one image at a time every epoch
     def __getitem__(self, index):
@@ -18,6 +27,8 @@ class StartingDataset(torch.utils.data.Dataset):
             index = index.tolist"""
         
         label = self.images_frame.iloc[index, 1]
+        label = self.labels(label)
+
         image_path = self.image_dir + self.images_frame.iloc[index, 0]
         image = torchvision.io.read_image(image_path)
 
