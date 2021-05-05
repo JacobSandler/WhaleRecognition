@@ -27,7 +27,7 @@ class StartingDataset(torch.utils.data.Dataset):
             index = index.tolist"""
         
         label = self.images_frame.iloc[index, 1]
-        label = self.labels(label)
+        label = self.labels[label]
 
         image_path = self.image_dir + self.images_frame.iloc[index, 0]
         image = torchvision.io.read_image(image_path)

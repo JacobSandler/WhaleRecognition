@@ -27,10 +27,7 @@ class StartingNetwork(torch.nn.Module):
 
         #in and out features will change with image size
         self.flat = nn.Flatten() # can use this instead of .view() function in forward()
-        self.fc1 = nn.Linear(in_features=19558, out_features=196)
-        self.fc2 = nn.Linear(in_features=196, out_features=49)
-        self.fc3 = nn.Linear(in_features=49, out_features=10) # output of 10 because we have 10 classes
-
+        self.fc1 = nn.Linear(in_features=19558, out_features=5005) # output of 5005 because we have 5005 different whale ids
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
