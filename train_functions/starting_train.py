@@ -59,19 +59,35 @@ def starting_train(
             if step % n_eval == 0:
                 if summary_path is not None:
                     writer.add_scalar('train_loss', loss, global_step=step)
+                #if(writer.init):
+                   
 
                 # TODO:
                 # Compute training accuracy.
                 # Log the results to Tensorboard.
+                images, labels = batch
+
+                outputs = model(images)
+                loss = loss_fn(outputs, labels)
+                predictions = torch.argmax(outputs, dim=1)
+                
+                correct += (labels == predictions).int().sum()
+                total += len(predictions)
+
+                train_accuracy = (correct / total)
+
 
                 # TODO:
-                # Compute validation loss and accuracy.
                 # Log the results to Tensorboard.
                 # Don't forget to turn off gradient calculations!
                 val_loss, val_accuracy = evaluate(val_loader, model, loss_fn)
+                
                 if summary_path is not None:
+                    writer.add_scalar('train_loss', loss, global_step=step)
                     writer.add_scalar('val_loss', val_loss, global_step=step)
                     writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
+                    writer.add_scalar('train_accuracy', train_accuracy, global_step=step)
+                    
 
             step += 1
 
