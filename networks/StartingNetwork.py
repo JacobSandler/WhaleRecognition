@@ -15,7 +15,7 @@ class StartingNetwork(torch.nn.Module):
         self.flatten = nn.Flatten()
         self.sigmoid = nn.Sigmoid()
 
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=6, kernel_size=5, stride=1, padding=1) # in_channels = 3 bc RGB 
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=1) # in_channels = 3 bc RGB 
         self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=3) # in_channels comes from previous output
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv3 = nn.Conv2d(in_channels=16, out_channels=12, kernel_size=3)
@@ -27,10 +27,7 @@ class StartingNetwork(torch.nn.Module):
 
         #in and out features will change with image size
         self.flat = nn.Flatten() # can use this instead of .view() function in forward()
-        self.fc1 = nn.Linear(in_features=1152, out_features=196)
-        self.fc2 = nn.Linear(in_features=196, out_features=49)
-        self.fc3 = nn.Linear(in_features=49, out_features=10) # output of 10 because we have 10 classes
-
+        self.fc1 = nn.Linear(in_features=19558, out_features=5005) # output of 5005 because we have 5005 different whale ids
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -42,7 +39,5 @@ class StartingNetwork(torch.nn.Module):
         x = self.flat(x)
 
         x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
 
         return x

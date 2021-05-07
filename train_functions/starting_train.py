@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.tensorboard
-
+import numpy as np
 
 def starting_train(
     train_dataset, val_dataset, model, hyperparameters, n_eval, summary_path
@@ -45,13 +45,15 @@ def starting_train(
         # Loop over each batch in the dataset
         for i, batch in enumerate(train_loader):
             print(f"\rIteration {i + 1} of {len(train_loader)} ...", end="")
+            images, labels = batch
+
+            labels = torch.tensor(labels)
 
             optimizer.zero_grad()
-            predictions = model(batch.inputs)
-            loss = loss_fn(predictions, batch.labels)
+            predictions = model(images)
+            loss = loss_fn(predictions, labels)
             loss.backward()
             optimizer.step()
-            
 
             # Periodically evaluate our model + log to Tensorboard
             if step % n_eval == 0:
@@ -116,8 +118,8 @@ def evaluate(val_loader, model, loss_fn):
     with torch.no_grad():
         for batch in val_loader:
             images, labels = batch
-            images = images.to(device)
-            labels = labels.to(device)
+            #images = images.to(device)
+            #labels = labels.to(device)
 
             outputs = model(images)
             loss = loss_fn(outputs, labels)
