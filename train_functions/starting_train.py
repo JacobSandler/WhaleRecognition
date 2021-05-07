@@ -39,6 +39,8 @@ def starting_train(
         writer = torch.utils.tensorboard.SummaryWriter(summary_path)
 
     step = 0
+    correct = 0
+    total = 0
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1} of {epochs}")
 
@@ -69,10 +71,10 @@ def starting_train(
                 loss = loss_fn(outputs, labels)
                 predictions = torch.argmax(outputs, dim=1)
                 
-                correct += (labels == predictions).int().sum()
-                total += len(predictions)
 
-                train_accuracy = (correct / total)
+
+                train_accuracy = compute_accuracy(predictions, labels)
+        
 
 
                 # TODO:
@@ -124,11 +126,9 @@ def evaluate(val_loader, model, loss_fn):
             outputs = model(images)
             loss = loss_fn(outputs, labels)
             predictions = torch.argmax(outputs, dim=1)
-            
-            correct += (labels == predictions).int().sum()
-            total += len(predictions)
 
-    accuracy = (correct / total).item()
+            accuracy = compute_accuracy(predictions, labels)
+            
     model.train()
     return loss, accuracy
 
