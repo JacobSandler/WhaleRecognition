@@ -2,16 +2,15 @@ import torch
 import torchvision
 import pandas as pd
 
-class StartingDataset(torch.utils.data.Dataset):
-    """
-    Dataset that contains 100000 3x224x224 black images (all zeros).
-    """
-
-    def __init__(self, csv_path, image_dir, image_size):
+class StartingDataset():
+    def __init__(self, csv_path, image_dir, image_size,percent_train):
         self.images_frame = pd.read_csv(csv_path)
+        self.labels = dict() 
         self.image_dir = image_dir
         self.image_size = image_size
-        self.labels = dict() 
+
+        #Shuffle the dataframe (taken from stackoverflow, I'm assuming this works)
+        self.images_frame = self.images_frame.sample(frac=1).reset_index(drop=True)
 
         # Convert labels to numeric ids
         ids = self.images_frame["Id"]
@@ -20,6 +19,25 @@ class StartingDataset(torch.utils.data.Dataset):
         for id in ids:
             self.labels[id] = index
             index += 1
+
+        #Splits the image frame into a frame for the train set and validation set
+        train_len = int(len(self.images_frame)*percent_train)
+        self.test_frame = self.images_frame.iloc[:,:train_len]
+        self.val_frame = self.images_frame.iloc[:,:len(self.images_frame)-train_len]
+        self.train_set = Dataset(self.test_frame, self.labels, image_dir, image_size)
+        self.val_set= Dataset(self.val_frame, self.labels, image_dir, image_size)
+    
+class Dataset(torch.utils.data.Dataset):
+    """
+    Dataset that contains 100000 3x224x224 black images (all zeros).
+    """
+
+    def __init__(self, images_frame, labels, image_dir, image_size):
+        self.images_frame = images_frame
+        self.image_dir = image_dir
+        self.image_size = image_size
+        self.labels = labels
+
 
         #load in this one image at a time every epoch
     def __getitem__(self, index):

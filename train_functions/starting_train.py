@@ -57,7 +57,8 @@ def starting_train(
 
             # Periodically evaluate our model + log to Tensorboard
             if step % n_eval == 0:
-                writer.add_scalar('train_loss', loss, global_step=step)
+                if summary_path is not None:
+                    writer.add_scalar('train_loss', loss, global_step=step)
 
                 # TODO:
                 # Compute training accuracy.
@@ -68,8 +69,9 @@ def starting_train(
                 # Log the results to Tensorboard.
                 # Don't forget to turn off gradient calculations!
                 val_loss, val_accuracy = evaluate(val_loader, model, loss_fn)
-                writer.add_scalar('val_loss', val_loss, global_step=step)
-                writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
+                if summary_path is not None:
+                    writer.add_scalar('val_loss', val_loss, global_step=step)
+                    writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
 
             step += 1
 
