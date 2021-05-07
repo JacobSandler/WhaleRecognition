@@ -81,6 +81,8 @@ def starting_train(
                 # Log the results to Tensorboard.
                 # Don't forget to turn off gradient calculations!
                 val_loss, val_accuracy = evaluate(val_loader, model, loss_fn)
+                print("loss: " + val_loss)
+                print("loss: " + val_accuracy)
                 
                 if summary_path is not None:
                     writer.add_scalar('train_loss', loss, global_step=step)
