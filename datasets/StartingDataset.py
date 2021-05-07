@@ -15,6 +15,7 @@ class StartingDataset(torch.utils.data.Dataset):
         #inputs = torch.zeros([3, 224, 224])
         #label = 0
         inputs = self.image[index]
+        #input_crop  = inputs[ystart:ystop, xstart:xstop] <-- y_start and y_stop dictated by the bounding box IDs
         label = self.labels[index]
         
 
