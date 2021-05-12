@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.utils.tensorboard
 import numpy as np
+from pytorch_metric_learning import losses, miners
+
 
 def starting_train(
     train_dataset, val_dataset, model, hyperparameters, n_eval, summary_path
@@ -32,7 +34,8 @@ def starting_train(
 
     # Initalize optimizer (for gradient descent) and loss function
     optimizer = optim.Adam(model.parameters())
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = losses.TripletMarginLoss(margin=MARGIN)
+    miner = miners.BatchEasyHardMiner(pos_strategy='all', neg_strategy='hard')
 
     # Initialize summary writer (for logging)
     if summary_path is not None:
@@ -52,8 +55,9 @@ def starting_train(
             labels = torch.tensor(labels)
 
             optimizer.zero_grad()
-            predictions = model(images)
-            loss = loss_fn(predictions, labels)
+            embeddings = model(images) # images is a batch of images
+            hard_triplets = miner(embeddings, labels)
+            loss = loss_fn(embeddings, labels, hard_triplets)
             loss.backward()
             optimizer.step()
 
@@ -72,12 +76,8 @@ def starting_train(
                 outputs = model(images)
                 loss = loss_fn(outputs, labels)
                 predictions = torch.argmax(outputs, dim=1)
-                
-
 
                 train_accuracy = compute_accuracy(predictions, labels)
-        
-
 
                 # TODO:
                 # Log the results to Tensorboard.

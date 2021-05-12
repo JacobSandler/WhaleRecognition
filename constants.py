@@ -6,3 +6,4 @@ IMAGE_DIR="./datasets/train/"
 IMAGE_SIZE = (650,1050)
 NUM_CLASSES = 5005 # Checked how many distinct labels
 PERCENT_TRAIN=.8
+MARGIN = 1
