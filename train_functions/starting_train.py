@@ -109,10 +109,13 @@ def compute_accuracy(outputs, labels):
     Example output:
         0.75
     """
+    correct = 0
+    total = 0
+    correct += (labels == predictions).int().sum()
+    total += len(predictions)
 
-    n_correct = (torch.round(outputs) == labels).sum().item()
-    n_total = len(outputs)
-    return n_correct / n_total
+    train_accuracy = correct / total
+    return train_accuracy
 
 
 def evaluate(val_loader, model, loss_fn):
