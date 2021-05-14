@@ -1,6 +1,7 @@
 import torch
 import torchvision
 import pandas as pd
+import random
 
 class StartingDataset():
     def __init__(self, csv_path, image_dir, image_size,percent_train):
@@ -37,25 +38,55 @@ class Dataset(torch.utils.data.Dataset):
         self.image_dir = image_dir
         self.image_size = image_size
         self.labels = labels
+        self.num_images = self.images_frame.size
 
+        self.images_frame.sort_values('Id')
 
         #load in this one image at a time every epoch
     def __getitem__(self, index):
         """if torch.is_tensor(index):
             index = index.tolist"""
         
-        label = self.images_frame.iloc[index, 1]
-        label = self.labels[label]
+        indices = torch.tensor([])
+        images = torch.tensor([])
+        labels = torch.tensor([])
 
-        image_path = self.image_dir + self.images_frame.iloc[index, 0]
-        image = torchvision.io.read_image(image_path)
+        index1 = index
+        index2 = index + 1
+        while (images.length < 2):
+            label1 = self.images_frame.iloc[index1, 1]
+            label2 = self.images_frame.iloc[index2, 1]
+            if (self.labels[label1] == self.labels[label2]):
+                indices.add(index1)
+                indices.add(index2)
+                labels.add(label1)
+                labels.add(label2)
+            else:
+                index1 = random.randrange(self.num_images)
+                index2 = random.randrange(self.num_images)
 
-        if(len(image)==3):
-            image = torchvision.transforms.Grayscale().forward(image)
-        image = torchvision.transforms.Resize(self.image_size).forward(image)
-        image = image.float()
+        index3 = random.randrange(self.num_images)
+        index4 = random.randrange(self.num_images)
+        label3 = self.images_frame.iloc[index3, 1]
+        label4 = self.images_frame.iloc[index4, 1]
+
+        indices.add(index3)
+        indices.add(index4)
+        labels.add(self.labels[label3])
+        labels.add(self.labels[label4])
+
+        for index in indices:
+            image_path = self.image_dir + self.images_frame.iloc[index, 0]
+            image = torchvision.io.read_image(image_path)
+
+            if(len(image)==3):
+                image = torchvision.transforms.Grayscale().forward(image)
+            image = torchvision.transforms.Resize(self.image_size).forward(image)
+            image = image.float()
+
+            images.add(image)
         
-        return image, label #map the label to an int
+        return images, labels #map the label to an int
     
     def __len__(self):
         return len(self.images_frame)

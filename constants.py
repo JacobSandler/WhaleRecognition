@@ -1,5 +1,6 @@
 EPOCHS = 100
-BATCH_SIZE = 32
+BATCH_SIZE = 16
+BATCH_ELEMENT = 4 
 N_EVAL = 100
 CSV_PATH="./datasets/train.csv"
 IMAGE_DIR="./datasets/train/"
