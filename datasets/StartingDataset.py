@@ -80,10 +80,11 @@ class Dataset(torch.utils.data.Dataset):
             image_path = self.image_dir + self.images_frame.iloc[index, 0]
             image = torchvision.io.read_image(image_path)
 
-            if(len(image)==3):
-                image = torchvision.transforms.Grayscale().forward(image)
+            if(len(image)==1):
+                image = image.repeat(3,1,1)
             image = torchvision.transforms.Resize(self.image_size).forward(image)
             image = image.float()
+            image = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]).forward(image)
 
             images.add(image)
         
