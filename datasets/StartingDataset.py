@@ -4,7 +4,7 @@ import pandas as pd
 import random
 
 class StartingDataset():
-    def __init__(self, csv_path, image_dir, image_size,percent_train):
+    def __init__(self, csv_path, image_dir, image_size, percent_train):
         self.images_frame = pd.read_csv(csv_path)
         self.labels = dict() 
         self.image_dir = image_dir
@@ -39,7 +39,7 @@ class Dataset(torch.utils.data.Dataset):
         self.image_dir = image_dir
         self.image_size = image_size
         self.labels = labels
-        self.num_images = self.images_frame.size
+        self.num_images = self.images_frame['Id'].size
 
         self.images_frame.sort_values('Id')
 
@@ -54,17 +54,14 @@ class Dataset(torch.utils.data.Dataset):
 
         index1 = index
         index2 = index + 1
-        while (torch.numel(images) < 2):
-            print(index1)
-            print(index2)
+        while (torch.numel(indices) < 2):
             label1 = self.images_frame.iloc[index1, 1]
             label2 = self.images_frame.iloc[index2, 1]
             if (self.labels[label1] == self.labels[label2]):
-                indices.add(index1)
-                indices.add(index2)
-                labels.add(self.labels[label1])
-                labels.add(self.labels[label2])
-
+                indices = torch.cat(tensors=(indices, torch.tensor([index1])))
+                indices = torch.cat(tensors=(indices, torch.tensor([index2])))
+                labels = torch.cat(tensors=(labels, torch.tensor([self.labels[label1]])))
+                labels = torch.cat(tensors=(labels, torch.tensor([self.labels[label2]])))
             else:
                 index1 = random.randrange(self.num_images)
                 index2 = index1 + 1
@@ -74,13 +71,13 @@ class Dataset(torch.utils.data.Dataset):
         label3 = self.images_frame.iloc[index3, 1]
         label4 = self.images_frame.iloc[index4, 1]
 
-        indices.add(index3)
-        indices.add(index4)
-        labels.add(self.labels[label3])
-        labels.add(self.labels[label4])
+        indices = torch.cat(tensors=(indices, torch.tensor([index3])))
+        indices = torch.cat(tensors=(indices, torch.tensor([index4])))
+        labels = torch.cat(tensors=(labels, torch.tensor([self.labels[label3]])))
+        labels = torch.cat(tensors=(labels, torch.tensor([self.labels[label4]])))    
 
         for index in indices:
-            image_path = self.image_dir + self.images_frame.iloc[index, 0]
+            image_path = self.image_dir + self.images_frame.iloc[int(index.item()), 0]
             image = torchvision.io.read_image(image_path)
 
             if(len(image)==1):
@@ -89,7 +86,7 @@ class Dataset(torch.utils.data.Dataset):
             image = image.float()
             image = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]).forward(image)
 
-            images.add(image)
+            images = torch.cat(tensors=(images, image))  
         
         return images, labels #map the label to an int
     
