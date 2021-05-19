@@ -20,6 +20,7 @@ class StartingDataset():
             self.labels[id] = index
             index += 1
 
+        print(len(ids))
         #Splits the image frame into a frame for the train set and validation set
         train_len = int(len(self.images_frame)*percent_train)
         self.test_frame = self.images_frame.iloc[:,:train_len]

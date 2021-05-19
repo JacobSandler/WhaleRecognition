@@ -38,6 +38,6 @@ class StartingNetwork(torch.nn.Module):
         x = self.pool3(F.relu(self.conv6(x)))
         x = self.flat(x)
 
-        x = F.relu(self.fc1(x))
+        x = self.fc1(x)
 
         return x
