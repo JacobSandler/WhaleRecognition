@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.models
 
 class StartingNetwork(torch.nn.Module):
     """
@@ -11,7 +12,13 @@ class StartingNetwork(torch.nn.Module):
 
         #maybe we should add this? Idk why it was there
         #super(CNN, self).init()
+        
         super().__init__()
+    
+        self.resnet =  torch.hub.load('pytorch/vision:v0.9.0','resnext101_32x4d',pretrained=True)
+        self.resnet = torch.nn.Sequential(*(list(self.resnet.cihldren())[:-1]))
+        self.resnet.eval()
+
         self.flatten = nn.Flatten()
         self.sigmoid = nn.Sigmoid()
 
@@ -30,6 +37,8 @@ class StartingNetwork(torch.nn.Module):
         self.fc1 = nn.Linear(in_features=19558, out_features=5005) # output of 5005 because we have 5005 different whale ids
 
     def forward(self, x):
+        with torch.no_grad:
+            x = self.resnet(x)
         x = F.relu(self.conv1(x))
         x = self.pool1(F.relu(self.conv2(x)))
         x = F.relu(self.conv3(x))
