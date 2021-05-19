@@ -55,6 +55,8 @@ class Dataset(torch.utils.data.Dataset):
         index1 = index
         index2 = index + 1
         while (torch.numel(images) < 2):
+            print(index1)
+            print(index2)
             label1 = self.images_frame.iloc[index1, 1]
             label2 = self.images_frame.iloc[index2, 1]
             if (self.labels[label1] == self.labels[label2]):

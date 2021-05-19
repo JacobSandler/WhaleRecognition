@@ -15,8 +15,8 @@ class StartingNetwork(torch.nn.Module):
         
         super().__init__()
     
-        self.resnet =  torch.hub.load('pytorch/vision:v0.9.0','resnext101_32x4d',pretrained=True)
-        self.resnet = torch.nn.Sequential(*(list(self.resnet.cihldren())[:-1]))
+        self.resnet =  torch.hub.load('pytorch/vision:v0.9.0','resnext101_32x8d',pretrained=True)
+        self.resnet = torch.nn.Sequential(*(list(self.resnet.children())[:-1]))
         self.resnet.eval()
 
         self.flatten = nn.Flatten()
