@@ -34,7 +34,7 @@ def starting_train(
 
     # Initalize optimizer (for gradient descent) and loss function
     optimizer = optim.Adam(model.parameters())
-    loss_fn = losses.TripletMarginLoss(margin=MARGIN)
+    loss_fn = losses.TripletMarginLoss(margin=hyperparameters["margin"])
     miner = miners.BatchEasyHardMiner(pos_strategy='all', neg_strategy='hard')
 
     # Initialize summary writer (for logging)

@@ -54,17 +54,18 @@ class Dataset(torch.utils.data.Dataset):
 
         index1 = index
         index2 = index + 1
-        while (images.length < 2):
+        while (torch.numel(images) < 2):
             label1 = self.images_frame.iloc[index1, 1]
             label2 = self.images_frame.iloc[index2, 1]
             if (self.labels[label1] == self.labels[label2]):
                 indices.add(index1)
                 indices.add(index2)
-                labels.add(label1)
-                labels.add(label2)
+                labels.add(self.labels[label1])
+                labels.add(self.labels[label2])
+
             else:
                 index1 = random.randrange(self.num_images)
-                index2 = random.randrange(self.num_images)
+                index2 = index1 + 1
 
         index3 = random.randrange(self.num_images)
         index4 = random.randrange(self.num_images)

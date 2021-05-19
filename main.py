@@ -15,7 +15,7 @@ SUMMARIES_PATH = "training_summaries"
 def main():
     # Get command line arguments
     args = parse_arguments()
-    hyperparameters = {"epochs": args.epochs, "batch_size": args.batch_size}
+    hyperparameters = {"epochs": args.epochs, "batch_size": args.batch_size, "margin": constants.MARGIN}
 
     # Create path for training summaries
     summary_path = None
