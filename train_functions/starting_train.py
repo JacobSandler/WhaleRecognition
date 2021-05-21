@@ -159,3 +159,11 @@ def evaluate(val_loader, model, loss_fn):
             
     model.train()
     return loss, accuracy
+
+
+
+
+
+
+
+
