@@ -59,10 +59,15 @@ def starting_train(
 
             # TODO: unload each "item grouping" from batches
             # Likely can just use: torch.cat(batch) 
-            print(batch.size())
 
             print(f"\rIteration {i + 1} of {len(train_loader)} ...", end="")
             images, labels = batch
+
+            images = torch.cat(list(images))
+            labels = torch.cat(list(labels))
+
+            print(images.size())
+            print(labels.size())
 
             labels = torch.tensor(labels)
 

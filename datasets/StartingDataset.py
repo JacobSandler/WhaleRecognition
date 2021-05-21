@@ -6,9 +6,9 @@ import random
 import tensorflow as tf
 
 class StartingDataset():
-    def __init__(self, csv_path, image_dir, image_size, percent_train, bbox_path):
+    def __init__(self, csv_path, image_dir, image_size, percent_train):
         self.images_frame = pd.read_csv(csv_path)
-        self.bbox_frame = pd.read_csv(bbox_path)
+        #self.bbox_frame = pd.read_csv(bbox_path)
         self.labels = dict() 
         self.image_dir = image_dir
         self.image_size = image_size
@@ -81,10 +81,11 @@ class Dataset(torch.utils.data.Dataset):
 
         first = True
         for index in indices:
-            current_label = self.images_frame.iloc[int(index.item()), 1]
+            #current_label = self.images_frame.iloc[int(index.item()), 1]
             image_path = self.image_dir + self.images_frame.iloc[int(index.item()), 0]
             image = torchvision.io.read_image(image_path)
 
+            """
             boxes = self.bbox_frame.loc[self.bbox_frame['Images'] == current_label]
 
             start_x = boxes[1]
@@ -93,6 +94,7 @@ class Dataset(torch.utils.data.Dataset):
             end_y = boxes[4]
 
             image = image[start_y:end_y, start_x:end_x]
+            """
 
             if(len(image)==1):
                 image = image.repeat(3,1,1)
