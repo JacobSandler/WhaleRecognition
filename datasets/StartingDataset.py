@@ -1,7 +1,9 @@
+from os import access
 import torch
 import torchvision
 import pandas as pd
 import random
+import tensorflow as tf
 
 class StartingDataset():
     def __init__(self, csv_path, image_dir, image_size, percent_train):
@@ -76,6 +78,7 @@ class Dataset(torch.utils.data.Dataset):
         labels = torch.cat(tensors=(labels, torch.tensor([self.labels[label3]])))
         labels = torch.cat(tensors=(labels, torch.tensor([self.labels[label4]])))    
 
+        first = True
         for index in indices:
             image_path = self.image_dir + self.images_frame.iloc[int(index.item()), 0]
             image = torchvision.io.read_image(image_path)
@@ -86,10 +89,16 @@ class Dataset(torch.utils.data.Dataset):
             image = image.float()
             image = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]).forward(image)
 
-            images = torch.cat(tensors=(images, image))  
-        
+            image = torch.unsqueeze(image, dim=0)
+
+            if first:   
+                images = image
+                first = False
+            else:
+                images = torch.cat(tensors=(images, image))
+                
         return images, labels #map the label to an int
     
     def __len__(self):
         return len(self.images_frame)
-
+                            
