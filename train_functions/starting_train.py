@@ -4,7 +4,6 @@ import torch.optim as optim
 import torch.utils.tensorboard
 import numpy as np
 from pytorch_metric_learning import losses, miners
-from google.colab import drive, files
 from os import path
 
 
@@ -23,15 +22,11 @@ def starting_train(
         summary_path:    Path where Tensorboard summaries are located.
     """
 
-
-    drive.mount('/content/gdrive')
-    save_path = '/content/gdrive/My Drive/model.pt'
-    save_path_safety = 'model.pt'
+    save_path = './model.pt'
 
     if(path.exists(save_path)):
         model.load_state_dict(torch.load(save_path))
-    if(path.exists(save_path_safety)):
-        model.load_state_dict(torch.load(save_path_safety))
+
 
     # Get keyword arguments
     batch_size, epochs = hyperparameters["batch_size"], hyperparameters["epochs"]
@@ -65,7 +60,7 @@ def starting_train(
             # TODO: unload each "item grouping" from batches
             # Likely can just use: torch.cat(batch) 
             print(batch.size())
-            
+
             print(f"\rIteration {i + 1} of {len(train_loader)} ...", end="")
             images, labels = batch
 
@@ -108,13 +103,9 @@ def starting_train(
                     writer.add_scalar('val_loss', val_loss, global_step=step)
                     writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
                     writer.add_scalar('train_accuracy', train_accuracy, global_step=step)
-            
+                    
             if(path.exists(save_path)):
                 torch.save(model.state_dict(), save_path)
-            if(path.exists(save_path_safety)):
-                torch.save(model.state_dict(), save_path_safety)
-                files.download(save_path_safety)
-
         
             step += 1
 
