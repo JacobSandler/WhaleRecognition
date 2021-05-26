@@ -90,6 +90,10 @@ def starting_train(
                 # Log the results to Tensorboard.
                 images, labels = batch
 
+                images = torch.cat(list(images))
+                labels = torch.cat(list(labels))
+
+
                 outputs = model(images)
                 loss = loss_fn(outputs, labels)
                 predictions = torch.argmax(outputs, dim=1)
