@@ -20,7 +20,7 @@ class StartingNetwork(torch.nn.Module):
         self.resnet.eval()
 
         self.flat = nn.Flatten() # can use this instead of .view() function in forward()
-        self.fc1 = nn.Linear(in_features=19558, out_features=5005) # output of 5005 because we have 5005 different whale ids
+        self.fc1 = nn.Linear(in_features=2048, out_features=5005) # output of 5005 because we have 5005 different whale ids
 
     def forward(self, x):
         with torch.no_grad():
