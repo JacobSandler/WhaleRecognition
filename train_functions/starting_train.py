@@ -89,6 +89,9 @@ def starting_train(
                 # Compute training accuracy.
                 # Log the results to Tensorboard.
                 images, labels = batch
+        
+                images = torch.cat(list(images))
+                labels = torch.cat(list(labels))
 
                 outputs = model(images)
                 loss = loss_fn(outputs, labels)
@@ -117,7 +120,7 @@ def starting_train(
         print()
 
 
-def compute_accuracy(outputs, labels):
+def compute_accuracy(predictions, labels):
     """
     Computes the accuracy of a model's predictions.
 
@@ -129,10 +132,13 @@ def compute_accuracy(outputs, labels):
         0.75
     """
 
-    n_correct = (torch.round(outputs) == labels).sum().item()
-    n_total = len(outputs)
-    return n_correct / n_total
+    correct = 0
+    total = 0
+    correct += (labels == predictions).int().sum()
+    total += len(predictions)
 
+    train_accuracy = correct / total
+    return train_accuracy
 
 def evaluate(val_loader, model, loss_fn):
     """
@@ -146,7 +152,9 @@ def evaluate(val_loader, model, loss_fn):
             images, labels = batch
             #images = images.to(device)
             #labels = labels.to(device)
-
+            images = torch.cat(list(images))
+            labels = torch.cat(list(labels))
+            
             outputs = model(images)
             loss = loss_fn(outputs, labels)
             predictions = torch.argmax(outputs, dim=1)
@@ -155,6 +163,12 @@ def evaluate(val_loader, model, loss_fn):
             
     model.train()
     return loss, accuracy
+
+
+
+
+
+
 
 
 
