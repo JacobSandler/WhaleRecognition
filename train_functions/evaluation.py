@@ -121,11 +121,12 @@ class EvaluationDataset(torch.utils.data.Dataset):
         return len(self.data)
 
 
-def evaluate(train_loader, test_loader, model, final=False):
+def evaluate(train_dataset, val_dataset, model, hyperparameters, n_eval, summary_path, final=False):
     """
     Evaluates model performance. Both `train_loader` and `test_loader` should be
     instances of `EvaluationDataset`.
     """
+
 
     model.eval()
 
