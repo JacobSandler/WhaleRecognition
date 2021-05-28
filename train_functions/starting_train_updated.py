@@ -13,8 +13,8 @@ from PIL import Image
 
 
 
-def starting_train(
-    train_dataset, test_eval_dataset, train_eval_dataset, model, hyperparameters, summary_path, n_eval
+def starting_train_updated(
+    train_dataset, val_dataset, model, hyperparameters, n_eval, summary_path, device, bbox_path, train_path
 ):
     """
     Trains and evaluates a model.
@@ -27,16 +27,40 @@ def starting_train(
         n_eval:          Interval at which we evaluate our model.
         summary_path:    Path where Tensorboard summaries are located.
     """
-
+    model.to(device)
     save_path = './model.pt'
 
     if(path.exists(save_path)):
         model.load_state_dict(torch.load(save_path))
 
-    
+    data = pd.read_csv(train_path)
+    data = data.sample(frac=1) # Shuffle data
+    train_eval_data = data.iloc[:int(PERCENT_TRAIN*len(data))]
+    test_eval_data = data.iloc[int(PERCENT_TRAIN*len(data)) + 1:]
     # Get keyword arguments
     batch_size, epochs = hyperparameters["batch_size"], hyperparameters["epochs"]
 
+    train_eval_dataset = EvaluationDataset(
+        train_eval_data,
+        bbox_path,
+        "/content/train",
+        train=True,
+        drop_duplicate_whales=True, # If you set this to True, your evaluation accuracy will be lower!!
+                                    # If you set this to False, evaluate() will take longer!!
+                                    # Recommendation: set this to True during training, and when you're done,
+                                    # create a new dataset with drop_duplicate_whales=False to get a final
+                                    # evaluation metric.
+    )
+    train_eval_dataset.to(device)
+
+    test_eval_dataset = EvaluationDataset(
+        test_eval_data,
+        bbox_path,
+        "/content/train",
+        train=False,
+        drop_duplicate_whales=False,
+    )
+    test_eval_dataset.to(device)
 
 
     train_eval_loader = torch.utils.data.DataLoader(train_eval_dataset, batch_size=BATCH_SIZE)
@@ -48,9 +72,9 @@ def starting_train(
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True
     )
-    #val_loader = torch.utils.data.DataLoader(
-        #val_dataset, batch_size=batch_size, shuffle=True
-    #)
+    val_loader = torch.utils.data.DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=True
+    )
 
     # Initalize optimizer (for gradient descent) and loss function
     optimizer = optim.Adam(model.parameters())
@@ -78,11 +102,8 @@ def starting_train(
 
             images = torch.cat(list(images))
             labels = torch.cat(list(labels))
-
-            print(images.size())
-            print(labels.size())
-
-            labels = torch.tensor(labels)
+            images = images.to(device)
+            labes = labels.to(device)
 
             optimizer.zero_grad()
             embeddings = model(images) # images is a batch of images
@@ -90,44 +111,15 @@ def starting_train(
             loss = loss_fn(embeddings, labels, hard_triplets)
             loss.backward()
             optimizer.step()
+            
+            if(step % 100 == 0):
+                print('Evaluating...')
+                print('Current accuracy: '+ str(evaluate(train_eval_loader, test_eval_loader, model)))
 
-            # Periodically evaluate our model + log to Tensorboard (ADD IN TRAINING EVALUTATIONS LATER)
-            if step % n_eval == 0:
-
-                val_accuracy = evaluate(train_eval_loader, test_eval_loader, model)
-                #print("loss: " + val_loss)
-                print("loss: " + val_accuracy)
-                
-                if summary_path is not None:
-                    writer.add_scalar('train_loss', loss, global_step=step)
-                    #writer.add_scalar('val_loss', val_loss, global_step=step)
-                    writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
-                    #writer.add_scalar('train_accuracy', train_accuracy, global_step=step)
-                #if summary_path is not None:
-                    #writer.add_scalar('train_loss', loss, global_step=step)
-                #if(writer.init):
-                
-                #train_accuracy = evaluate(train_eval_loader, test_eval_loader, model)
-
-
-                # TODO:
-                # Compute training accuracy.
-                # Log the results to Tensorboard.
-                #images, labels = batch
-
-                #outputs = model(images)
-                #loss = loss_fn(outputs, labels)
-                #predictions = torch.argmax(outputs, dim=1)
-                    
-            if(path.exists(save_path)):
-                torch.save(model.state_dict(), save_path)
+            step += 1 
+            torch.save(model.state_dict(), save_path)
         
-            step += 1
-
-        # TODO:
-        # Log the results to Tensorboard.
-        # Don't forget to turn off gradient calculations!
-
+        print()
 
 
 
@@ -149,11 +141,7 @@ def evaluate(train_loader, test_loader, model, final=False):
     train_whale_ids = []
     with torch.no_grad():  # Parentheses are important :)
         for batch in train_loader:
-            print('x')
             images, whale_ids = batch
-
-            images = torch.cat(list(images))
-            whale_ids = torch.cat(list(whale_ids))
 
             batch_embeddings = model.forward(images)
 
@@ -171,11 +159,7 @@ def evaluate(train_loader, test_loader, model, final=False):
     test_whale_ids = []
     with torch.no_grad():
         for batch in test_loader:
-            print('y')
             images, whale_ids = batch
-
-            images = torch.cat(list(images))
-            whale_ids = torch.cat(list(whale_ids))
 
             batch_embeddings = model.forward(images)
 
@@ -250,7 +234,7 @@ def compute_accuracy(
     for whale_id, embedding in zip(test_ids, test_embeddings):
         # This line will compute the distance between the test embedding and EVERY train
         # embedding
-        distances = torch.norm(train_embeddings - embedding.view((1, 64)), dim=1)
+        distances = torch.norm(train_embeddings - embedding.view((1, 5005)), dim=1)
 
         min_index = torch.argmin(distances)
         prediction = (
@@ -262,3 +246,58 @@ def compute_accuracy(
 
     return correct / total
 
+class EvaluationDataset(torch.utils.data.Dataset):
+    def __init__(
+        self,
+        data,
+        crop_info_path,
+        image_folder,
+        train=True,
+        drop_duplicate_whales=False,
+    ):
+        self.data = data
+        self.crop_info = pd.read_csv(crop_info_path, index_col="Image")
+        self.image_folder = image_folder
+
+        self.device = None
+
+        if train:
+            self.data = self.data[self.data.Id != "new_whale"]
+        if drop_duplicate_whales:
+            self.data = self.data.drop_duplicates(subset="Id")
+
+    def to(self, device):
+        self.device = device
+        return self
+
+    def __getitem__(self, index):
+        row = self.data.iloc[index]
+        image_file, whale_id = row.Image, row.Id
+
+        """
+        You may want to modify the code STARTING HERE...
+        """
+        bbox = self.crop_info.loc[row.Image]
+        image = Image.open(os.path.join(self.image_folder, image_file))
+        image = image.convert('RGB') # Maybe change this
+        image = image.crop((bbox["x0"], bbox["y0"], bbox["x1"], bbox["y1"]))
+
+        preprocess = transforms.Compose(
+            [
+                transforms.Resize((224, 224)), # Probably change this
+                transforms.ToTensor(),
+                transforms.Normalize((0.485,0.456,0.406,), (0.229, 0.224, 0.225,)), # and maybe this too
+            ]
+        )
+        image = preprocess(image)
+        """
+        ... and ENDING HERE. In particular, we converted the image to grayscale with a
+        size of 224x448. You probably want to change that.
+        """
+
+        image = image.to(self.device)
+
+        return image, whale_id
+
+    def __len__(self):
+        return len(self.data)
