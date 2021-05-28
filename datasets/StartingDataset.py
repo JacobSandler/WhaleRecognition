@@ -24,7 +24,6 @@ class StartingDataset():
             self.labels[id] = index
             index += 1
 
-        print(len(ids))
         #Splits the image frame into a frame for the train set and validation set
         train_len = int(len(self.images_frame)*percent_train)
         self.test_frame = self.images_frame.iloc[:,:train_len]
@@ -58,6 +57,9 @@ class Dataset(torch.utils.data.Dataset):
         index1 = index
         index2 = index + 1
         while (torch.numel(indices) < 2):
+            if(index2 >= len(self.images_frame)):
+                index1 = random.randrange(self.num_images)
+                index2 = index1 + 1
             label1 = self.images_frame.iloc[index1, 1]
             label2 = self.images_frame.iloc[index2, 1]
             if (self.labels[label1] == self.labels[label2]):

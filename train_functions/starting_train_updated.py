@@ -121,6 +121,8 @@ def starting_train_updated(
         
         print()
 
+    prin
+
 
 
 def evaluate(train_loader, test_loader, model, final=False):
