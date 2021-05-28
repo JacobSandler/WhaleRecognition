@@ -14,7 +14,7 @@ from PIL import Image
 
 
 def starting_train(
-    train_dataset, test_dataset, model, hyperparameters, summary_path
+    train_dataset, test_eval_dataset, train_eval_dataset, model, hyperparameters, summary_path, n_eval
 ):
     """
     Trains and evaluates a model.
@@ -33,17 +33,14 @@ def starting_train(
     if(path.exists(save_path)):
         model.load_state_dict(torch.load(save_path))
 
-    #data = pd.read_csv(train_path)
-    #data = data.sample(frac=1) # Shuffle data
-    train_eval_data = test_dataset.iloc[:int(PERCENT_TRAIN*len(test_dataset))]
-    test_eval_data = test_dataset[int(PERCENT_TRAIN*len(test_dataset)) + 1:]
+    
     # Get keyword arguments
     batch_size, epochs = hyperparameters["batch_size"], hyperparameters["epochs"]
 
 
 
-    train_eval_loader = torch.utils.data.DataLoader(train_eval_data, batch_size=BATCH_SIZE)
-    test_eval_loader = torch.utils.data.DataLoader(test_eval_data, batch_size=BATCH_SIZE)
+    train_eval_loader = torch.utils.data.DataLoader(train_eval_dataset, batch_size=BATCH_SIZE)
+    test_eval_loader = torch.utils.data.DataLoader(test_eval_dataset, batch_size=BATCH_SIZE)
 
 
 
@@ -95,7 +92,17 @@ def starting_train(
             optimizer.step()
 
             # Periodically evaluate our model + log to Tensorboard (ADD IN TRAINING EVALUTATIONS LATER)
-            #if step % n_eval == 0:
+            if step % n_eval == 0:
+
+                val_accuracy = evaluate(train_eval_loader, test_eval_loader, model)
+                #print("loss: " + val_loss)
+                print("loss: " + val_accuracy)
+                
+                if summary_path is not None:
+                    writer.add_scalar('train_loss', loss, global_step=step)
+                    #writer.add_scalar('val_loss', val_loss, global_step=step)
+                    writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
+                    #writer.add_scalar('train_accuracy', train_accuracy, global_step=step)
                 #if summary_path is not None:
                     #writer.add_scalar('train_loss', loss, global_step=step)
                 #if(writer.init):
@@ -120,15 +127,7 @@ def starting_train(
         # TODO:
         # Log the results to Tensorboard.
         # Don't forget to turn off gradient calculations!
-        val_accuracy = evaluate(train_eval_loader, test_eval_loader, model)
-        #print("loss: " + val_loss)
-        print("loss: " + val_accuracy)
-        
-        if summary_path is not None:
-            writer.add_scalar('train_loss', loss, global_step=step)
-            #writer.add_scalar('val_loss', val_loss, global_step=step)
-            writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
-            #writer.add_scalar('train_accuracy', train_accuracy, global_step=step)
+
 
 
 
@@ -263,59 +262,3 @@ def compute_accuracy(
 
     return correct / total
 
-class EvaluationDataset(torch.utils.data.Dataset):
-    def __init__(
-        self,
-        data,
-        crop_info_path,
-        image_folder,
-        train=True,
-        drop_duplicate_whales=False,
-    ):
-        self.data = data
-        self.data = pd.read_csv(data)
-        self.crop_info = pd.read_csv(crop_info_path, index_col="Image")
-        self.image_folder = image_folder
-
-        #self.device = None
-
-        if train:
-            self.data = self.data[self.data.Id != "new_whale"]
-        if drop_duplicate_whales:
-            self.data = self.data.drop_duplicates(subset="Id")
-
-    #def to(self, device):
-    #    self.device = device
-    #    return self
-
-    def __getitem__(self, index):
-        row = self.data.iloc[index]
-        image_file, whale_id = row.Image, row.Id
-
-        """
-        You may want to modify the code STARTING HERE...
-        """
-        bbox = self.crop_info.loc[row.Image]
-        image = Image.open(os.path.join(self.image_folder, image_file))
-        image = image.convert('P') # Maybe change this
-        image = image.crop((bbox["x0"], bbox["y0"], bbox["x1"], bbox["y1"]))
-
-        preprocess = transforms.Compose(
-            [
-                transforms.Resize((224, 224)), # Probably change this
-                transforms.ToTensor(),
-                transforms.Normalize((0.485,0.456,0.406,), (0.229, 0.224, 0.225,)), # and maybe this too
-            ]
-        )
-        image = preprocess(image)
-        """
-        ... and ENDING HERE. In particular, we converted the image to grayscale with a
-        size of 224x448. You probably want to change that.
-        """
-
-        #image = image.to(self.device)
-
-        return image, whale_id
-
-    def __len__(self):
-        return len(self.data)

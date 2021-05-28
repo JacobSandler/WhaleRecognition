@@ -34,16 +34,24 @@ def main():
     dataset = StartingDataset(constants.CSV_PATH, constants.IMAGE_DIR, constants.IMAGE_SIZE, constants.PERCENT_TRAIN)
     train_dataset = dataset.train_set
     val_dataset = dataset.val_set
+    
 
-    test_dataset = EvaluationDataset(data=constants.CSV_PATH , crop_info_path=constants.BBOX_PATH, image_folder="./datasets/train")
+    data = pd.read_csv(constants.CSV_PATH)
+    #data = data.sample(frac=1) # Shuffle data
+    train_eval_data = data.iloc[:int(constants.PERCENT_TRAIN*len(data))]
+    test_eval_data = data.iloc[int(constants.PERCENT_TRAIN*len(data)) + 1:]
+    train_eval_dataset = EvaluationDataset(data=train_eval_data , crop_info_path=constants.BBOX_PATH, image_folder="./datasets/train", train=True, drop_duplicate_whales=True)
+    test_eval_dataset = EvaluationDataset(data=test_eval_data , crop_info_path=constants.BBOX_PATH, image_folder="./datasets/train", train=False, drop_duplicate_whales=False)
 
     model = StartingNetwork()
     starting_train(
         train_dataset=train_dataset,
-        test_dataset=test_dataset,
+        test_eval_dataset=test_eval_dataset,
+        train_eval_dataset=train_eval_dataset,
         model=model,
         hyperparameters=hyperparameters,
         summary_path=summary_path,
+        n_eval=constants.N_EVAL
     )
 
 def parse_arguments():
