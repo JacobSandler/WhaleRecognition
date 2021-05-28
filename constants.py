@@ -8,3 +8,4 @@ IMAGE_SIZE = (224,224)
 NUM_CLASSES = 5005 # Checked how many distinct labels
 PERCENT_TRAIN=.8
 MARGIN = 1
+BBOX_PATH="./datasets/bbox.csv"

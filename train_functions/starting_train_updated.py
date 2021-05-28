@@ -13,8 +13,8 @@ from PIL import Image
 
 
 
-def starting_train_updated(
-    train_dataset, val_dataset, model, hyperparameters, n_eval, summary_path, device, bbox_path, train_path
+def starting_train(
+    train_dataset, val_dataset, test_dataset, model, hyperparameters, n_eval, summary_path, bbox_path, train_path
 ):
     """
     Trains and evaluates a model.
@@ -40,18 +40,10 @@ def starting_train_updated(
     # Get keyword arguments
     batch_size, epochs = hyperparameters["batch_size"], hyperparameters["epochs"]
 
-    train_eval_dataset = EvaluationDataset(
-        train_eval_data,
-        bbox_path,
-        train_path,
-        train=True,
-        drop_duplicate_whales=True, # If you set this to True, your evaluation accuracy will be lower!!
-                                    # If you set this to False, evaluate() will take longer!!
-                                    # Recommendation: set this to True during training, and when you're done,
-                                    # create a new dataset with drop_duplicate_whales=False to get a final
-                                    # evaluation metric.
-    )
-    train_eval_dataset.to(device)
+    #train_eval_dataset = test_dataset
+    #test_eval_dataset = 
+
+    #train_eval_dataset.to(device)
 
     test_dataset = EvaluationDataset(
         test_eval_data,
@@ -60,11 +52,12 @@ def starting_train_updated(
         train=False,
         drop_duplicate_whales=False,
     )
-    test_dataset.to(device)
+
+    #test_dataset.to(device)
 
 
-    train_eval_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE)
-    test_eval_loader = torch.utils.data.DataLoader(test_dataset, batch_size=BATCH_SIZE)
+    train_eval_loader = torch.utils.data.DataLoader(train_eval_dataset, batch_size=BATCH_SIZE)
+    test_eval_loader = torch.utils.data.DataLoader(test_eval_dataset, batch_size=BATCH_SIZE)
 
 
 
@@ -176,6 +169,10 @@ def evaluate(train_loader, test_loader, model, final=False):
         for batch in train_loader:
             print('x')
             images, whale_ids = batch
+
+            images = torch.cat(list(images))
+            whale_ids = torch.cat(list(whale_ids))
+
             batch_embeddings = model.forward(images)
 
             train_embeddings += list(batch_embeddings)
@@ -194,6 +191,10 @@ def evaluate(train_loader, test_loader, model, final=False):
         for batch in test_loader:
             print('y')
             images, whale_ids = batch
+
+            images = torch.cat(list(images))
+            whale_ids = torch.cat(list(whale_ids))
+
             batch_embeddings = model.forward(images)
 
             test_embeddings += list(batch_embeddings)
@@ -292,16 +293,16 @@ class EvaluationDataset(torch.utils.data.Dataset):
         self.crop_info = pd.read_csv(crop_info_path, index_col="Image")
         self.image_folder = image_folder
 
-        self.device = None
+        #self.device = None
 
         if train:
             self.data = self.data[self.data.Id != "new_whale"]
         if drop_duplicate_whales:
             self.data = self.data.drop_duplicates(subset="Id")
 
-    def to(self, device):
-        self.device = device
-        return self
+    #def to(self, device):
+    #    self.device = device
+    #    return self
 
     def __getitem__(self, index):
         row = self.data.iloc[index]
@@ -328,7 +329,7 @@ class EvaluationDataset(torch.utils.data.Dataset):
         size of 224x448. You probably want to change that.
         """
 
-        image = image.to(self.device)
+        #image = image.to(self.device)
 
         return image, whale_id
 

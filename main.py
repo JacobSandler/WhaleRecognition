@@ -6,7 +6,7 @@ import pandas as pd
 import constants
 from datasets.StartingDataset import StartingDataset
 from networks.StartingNetwork import StartingNetwork
-from train_functions.starting_train import starting_train
+from train_functions.starting_train_updated import EvaluationDataset, starting_train
 
 
 SUMMARIES_PATH = "training_summaries"
@@ -34,16 +34,21 @@ def main():
     dataset = StartingDataset(constants.CSV_PATH, constants.IMAGE_DIR, constants.IMAGE_SIZE, constants.PERCENT_TRAIN)
     train_dataset = dataset.train_set
     val_dataset = dataset.val_set
+
+    test_dataset = EvaluationDataset(data=constants.CSV_PATH , crop_info_path=constants.BBOX_PATH, image_folder="./datasets/train")
+
     model = StartingNetwork()
     starting_train(
         train_dataset=train_dataset,
         val_dataset=val_dataset,
+        test_dataset=test_dataset,
         model=model,
         hyperparameters=hyperparameters,
         n_eval=args.n_eval,
         summary_path=summary_path,
+        bbox_path=constants.BBOX_PATH,
+        train_path=constants.CSV_PATH
     )
-
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
