@@ -273,6 +273,7 @@ class EvaluationDataset(torch.utils.data.Dataset):
         drop_duplicate_whales=False,
     ):
         self.data = data
+        self.data = pd.read_csv(data)
         self.crop_info = pd.read_csv(crop_info_path, index_col="Image")
         self.image_folder = image_folder
 
