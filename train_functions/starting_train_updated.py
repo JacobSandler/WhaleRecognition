@@ -14,7 +14,7 @@ from PIL import Image
 
 
 def starting_train(
-    train_dataset, val_dataset, test_dataset, model, hyperparameters, n_eval, summary_path, bbox_path, train_path
+    train_dataset, test_dataset, model, hyperparameters, summary_path
 ):
     """
     Trains and evaluates a model.
@@ -33,31 +33,17 @@ def starting_train(
     if(path.exists(save_path)):
         model.load_state_dict(torch.load(save_path))
 
-    data = pd.read_csv(train_path)
-    data = data.sample(frac=1) # Shuffle data
-    train_eval_data = data.iloc[:int(PERCENT_TRAIN*len(data))]
-    test_eval_data = data.iloc[int(PERCENT_TRAIN*len(data)) + 1:]
+    #data = pd.read_csv(train_path)
+    #data = data.sample(frac=1) # Shuffle data
+    train_eval_data = test_dataset.iloc[:int(PERCENT_TRAIN*len(test_dataset))]
+    test_eval_data = test_dataset[int(PERCENT_TRAIN*len(test_dataset)) + 1:]
     # Get keyword arguments
     batch_size, epochs = hyperparameters["batch_size"], hyperparameters["epochs"]
 
-    #train_eval_dataset = test_dataset
-    #test_eval_dataset = 
-
-    #train_eval_dataset.to(device)
-
-    test_dataset = EvaluationDataset(
-        test_eval_data,
-        bbox_path,
-        train_path,
-        train=False,
-        drop_duplicate_whales=False,
-    )
-
-    #test_dataset.to(device)
 
 
-    train_eval_loader = torch.utils.data.DataLoader(train_eval_dataset, batch_size=BATCH_SIZE)
-    test_eval_loader = torch.utils.data.DataLoader(test_eval_dataset, batch_size=BATCH_SIZE)
+    train_eval_loader = torch.utils.data.DataLoader(train_eval_data, batch_size=BATCH_SIZE)
+    test_eval_loader = torch.utils.data.DataLoader(test_eval_data, batch_size=BATCH_SIZE)
 
 
 
@@ -65,9 +51,9 @@ def starting_train(
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True
     )
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=True
-    )
+    #val_loader = torch.utils.data.DataLoader(
+        #val_dataset, batch_size=batch_size, shuffle=True
+    #)
 
     # Initalize optimizer (for gradient descent) and loss function
     optimizer = optim.Adam(model.parameters())
@@ -108,44 +94,41 @@ def starting_train(
             loss.backward()
             optimizer.step()
 
-            # Periodically evaluate our model + log to Tensorboard
-            if step % n_eval == 0:
-                if summary_path is not None:
-                    writer.add_scalar('train_loss', loss, global_step=step)
+            # Periodically evaluate our model + log to Tensorboard (ADD IN TRAINING EVALUTATIONS LATER)
+            #if step % n_eval == 0:
+                #if summary_path is not None:
+                    #writer.add_scalar('train_loss', loss, global_step=step)
                 #if(writer.init):
                 
-                train_accuracy = evaluate(train_eval_loader, test_eval_loader, model)
+                #train_accuracy = evaluate(train_eval_loader, test_eval_loader, model)
 
 
                 # TODO:
                 # Compute training accuracy.
                 # Log the results to Tensorboard.
-                images, labels = batch
+                #images, labels = batch
 
-                outputs = model(images)
-                loss = loss_fn(outputs, labels)
-                predictions = torch.argmax(outputs, dim=1)
-
-                
-                # TODO:
-                # Log the results to Tensorboard.
-                # Don't forget to turn off gradient calculations!
-                val_loss, val_accuracy = evaluate(val_loader, model, loss_fn)
-                print("loss: " + val_loss)
-                print("loss: " + val_accuracy)
-                
-                if summary_path is not None:
-                    writer.add_scalar('train_loss', loss, global_step=step)
-                    writer.add_scalar('val_loss', val_loss, global_step=step)
-                    writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
-                    writer.add_scalar('train_accuracy', train_accuracy, global_step=step)
+                #outputs = model(images)
+                #loss = loss_fn(outputs, labels)
+                #predictions = torch.argmax(outputs, dim=1)
                     
             if(path.exists(save_path)):
                 torch.save(model.state_dict(), save_path)
         
             step += 1
 
-        print()
+        # TODO:
+        # Log the results to Tensorboard.
+        # Don't forget to turn off gradient calculations!
+        val_accuracy = evaluate(train_eval_loader, test_eval_loader, model)
+        #print("loss: " + val_loss)
+        print("loss: " + val_accuracy)
+        
+        if summary_path is not None:
+            writer.add_scalar('train_loss', loss, global_step=step)
+            #writer.add_scalar('val_loss', val_loss, global_step=step)
+            writer.add_scalar('val_accuracy', val_accuracy, global_step=step)
+            #writer.add_scalar('train_accuracy', train_accuracy, global_step=step)
 
 
 

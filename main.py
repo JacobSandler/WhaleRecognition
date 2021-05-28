@@ -40,14 +40,10 @@ def main():
     model = StartingNetwork()
     starting_train(
         train_dataset=train_dataset,
-        val_dataset=val_dataset,
         test_dataset=test_dataset,
         model=model,
         hyperparameters=hyperparameters,
-        n_eval=args.n_eval,
         summary_path=summary_path,
-        bbox_path=constants.BBOX_PATH,
-        train_path=constants.CSV_PATH
     )
 
 def parse_arguments():
